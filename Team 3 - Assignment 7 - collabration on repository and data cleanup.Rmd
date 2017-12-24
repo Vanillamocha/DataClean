@@ -1,0 +1,62 @@
+---
+title: "Assignment 7"
+author: "Team 3 - Qinqin Wang, Qiaozhi Jiang, Mandi Wang and Xiaohang Yu"
+date: "12/23/2017"
+output: html_document
+---
+
+```{r}
+dirty_data <- read.csv("/Users/qiaozhijiang/Desktop/ANLY 510 91/dirty_data.csv")
+colnames(dirty_data)
+```
+
+## Populate the missing values in the Area variable with an appropriate values (Birmingham, Coventry, Dudley, Sandwell, Solihull, Walsall or Wolverhampton)
+
+```{r}
+library(tidyr)
+data_filled <- fill(dirty_data, Area, .direction = c("down"))
+```
+
+## Remove special characters, padding (the white space before and after the text) from Street 1 and Street 2 variables. 
+
+```{r}
+data_filled$Street <- gsub("[^A-Za-z ]", " ",data_filled$Street)
+data_filled$Street <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", data_filled$Street, perl=TRUE)
+data_filled$Street.2 <- gsub("[^A-Za-z ]", " ", data_filled$Street.2)
+data_filled$Street.2 <- gsub("(?<=[\\s])\\s*|^\\s+|\\s+$", "", data_filled$Street.2, perl=TRUE)
+```
+
+## Make sure the first letters of street names are capitalized and the street denominations are following the same standard (for example, all streets are indicated as “str.”, avenues as “ave.”, etc.
+
+```{r}
+library(gsubfn)
+data_filled$Street <- gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2", data_filled$Street, perl=TRUE)
+data_filled$Street.2 <- gsub("(^|[[:space:]])([[:alpha:]])", "\\1\\U\\2", data_filled$Street.2, perl=TRUE)
+patterns <- c("Lane", "Road", "Avenue", "Green", "Hospital", "Village", "Center", "Drive", "Circle", "Park","Street")
+replacements <- c("Lan.", "Rd.", "Ave.", "Gr.", "Hosp.", "Vil.", "Ctr.", "Dr.", "Cr.", "Pk.", "Str.")
+data_filled$Street <- gsubfn("\\b\\w+\\b", as.list(setNames(replacements, patterns)), data_filled$Street)
+data_filled$Street.2 <- gsubfn("\\b\\w+\\b", as.list(setNames(replacements, patterns)),data_filled$Street.2)
+```
+
+## If the value in Street 2 duplicates the value in Street 1, remove the value in Street 2
+
+```{r}
+i = 1
+while(i < nrow(data_filled )) 
+{
+  if(data_filled$Street[i] == data_filled$Street.2 [i]) 
+  {
+    data_filled$Street.2 [i] = ""
+  }
+  i = i+1
+}
+```
+
+## Remove the “Strange HTML column”
+
+```{r}
+data_filled = subset(data_filled[,1:4])
+head(data_filled)
+write.csv(data_filled, "/Users/qiaozhijiang/Desktop/ANLY 510 91/clean_data.csv",row.names = FALSE)
+```
+
